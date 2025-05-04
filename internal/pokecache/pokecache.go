@@ -32,7 +32,7 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 }
 
 func NewCache(interval time.Duration) *Cache {
-	cache := &Cache{entries: map[string]cacheEntry{}}
+	cache := &Cache{entries: map[string]cacheEntry{}, mu: &sync.Mutex{}}
 	go cache.reapLoop(interval)
 	return cache
 }
