@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
+
+	"github.com/horsedevours/pokedex/internal/pokeapi"
 )
 
 const baseUrl string = "https://pokeapi.co/api/v2/"
@@ -86,16 +86,6 @@ func commandExit(cfg *Config) error {
 	return fmt.Errorf("Failed to exit for some reason...")
 }
 
-type locationArea struct {
-	Count    int
-	Next     string
-	Previous string
-	Results  []struct {
-		Name string
-		Url  string
-	}
-}
-
 func commandMap(cfg *Config) error {
 	fullUrl := ""
 	if cfg.Next != "" {
@@ -103,31 +93,18 @@ func commandMap(cfg *Config) error {
 	} else {
 		fullUrl = baseUrl + "location-area"
 	}
-	req, err := http.NewRequest("GET", fullUrl, nil)
+
+	locs, err := pokeapi.GetLocationAreas(fullUrl)
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	decoder := json.NewDecoder(res.Body)
-	locs := locationArea{}
-	if err := decoder.Decode(&locs); err != nil {
-		return err
-	}
-
-	fmt.Println(locs.Next)
+	cfg.Next = locs.Next
+	cfg.Previous = locs.Previous
 
 	for _, loc := range locs.Results {
 		fmt.Println(loc.Name)
 	}
-	cfg.Next = locs.Next
-	cfg.Previous = locs.Previous
 
 	return nil
 }
@@ -136,31 +113,18 @@ func commandMapb(cfg *Config) error {
 	if cfg.Previous == "" {
 		fmt.Println("you're on the first page")
 	}
-	req, err := http.NewRequest("GET", cfg.Previous, nil)
+
+	locs, err := pokeapi.GetLocationAreas(cfg.Previous)
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	decoder := json.NewDecoder(res.Body)
-	locs := locationArea{}
-	if err := decoder.Decode(&locs); err != nil {
-		return err
-	}
-
-	fmt.Println(locs.Next)
+	cfg.Next = locs.Next
+	cfg.Previous = locs.Previous
 
 	for _, loc := range locs.Results {
 		fmt.Println(loc.Name)
 	}
-	cfg.Next = locs.Next
-	cfg.Previous = locs.Previous
 
 	return nil
 }
