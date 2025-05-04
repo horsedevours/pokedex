@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 
@@ -23,6 +24,8 @@ type Config struct {
 }
 
 var registry map[string]cliCommand
+
+var pokedex map[string]pokeapi.Pokemon = map[string]pokeapi.Pokemon{}
 
 func main() {
 	registry = map[string]cliCommand{
@@ -50,6 +53,11 @@ func main() {
 			name:        "explore",
 			description: "Accepts area name as argument; displays Pokemon inhabiting the specified area",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Accepts pokemon name as argument; throws a Pokeball at the specified Pokemon",
+			callback:    commandCatch,
 		},
 	}
 
@@ -152,6 +160,25 @@ func commandExplore(cfg *Config, area string) error {
 	fmt.Println("Found Pokemon:")
 	for _, poke := range areaPokemon.Encounters {
 		fmt.Printf("- %s\n", poke.Pokemon.Name)
+	}
+
+	return nil
+}
+
+func commandCatch(cfg *Config, pokemon string) error {
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon)
+
+	pkmn, err := pokeapi.GetPokemonData(baseUrl + "pokemon/" + pokemon)
+	if err != nil {
+		return err
+	}
+
+	battle := rand.Intn(pkmn.BaseExperience)
+	if battle < 40 {
+		fmt.Printf("%s was caught!\n", pkmn.Name)
+		pokedex[pkmn.Name] = pkmn
+	} else {
+		fmt.Printf("%s escaped!\n", pkmn.Name)
 	}
 
 	return nil
