@@ -17,14 +17,16 @@ type cacheEntry struct {
 
 func (c *Cache) Add(key string, val []byte) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.entries[key] = cacheEntry{
 		createdAt: time.Now(),
 		val:       val,
 	}
-	c.mu.Unlock()
 }
 
 func (c *Cache) Get(key string) ([]byte, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if entry, ok := c.entries[key]; ok {
 		return entry.val, true
 	}

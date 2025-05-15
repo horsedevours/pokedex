@@ -64,6 +64,11 @@ func main() {
 			description: "Accepts pokemon name as argument; displays details if specified Pokemon has been caught",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Lists all of the user's caught pokemon",
+			callback:    commandPokedex,
+		},
 	}
 
 	cfg := Config{}
@@ -190,11 +195,8 @@ func commandCatch(cfg *Config, pokemon string) error {
 }
 
 func commandInspect(cfg *Config, pokemon string) error {
-	pkmn, err := pokeapi.GetPokemonDataFromCache(baseUrl + "pokemon/" + pokemon)
-	if err != nil {
-		return err
-	}
-	if pkmn.Name == "" {
+	pkmn, ok := pokedex[pokemon]
+	if !ok {
 		fmt.Printf("You ain't caught no %s!\n", pokemon)
 		return nil
 	}
@@ -211,5 +213,18 @@ func commandInspect(cfg *Config, pokemon string) error {
 		fmt.Printf("  -%s\n", typ.Type.Name)
 	}
 
+	return nil
+}
+
+func commandPokedex(cfg *Config, dummy string) error {
+	if len(pokedex) == 0 {
+		fmt.Println("You ain't caught nothin'")
+		return nil
+	}
+
+	fmt.Println("Your pokedex:")
+	for p, _ := range pokedex {
+		fmt.Printf(" - %s\n", p)
+	}
 	return nil
 }

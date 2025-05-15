@@ -123,10 +123,11 @@ func GetAreaPokemon(url string) (areaPokemon, error) {
 }
 
 func GetPokemonData(url string) (Pokemon, error) {
-	pkmn, err := GetPokemonDataFromCache(url)
-	if err != nil {
-		return Pokemon{}, err
-	} else if pkmn.Name != "" {
+	pkmn := Pokemon{}
+	if data, ok := cache.Get(url); ok {
+		if err := json.Unmarshal(data, &pkmn); err != nil {
+			return Pokemon{}, err
+		}
 		return pkmn, nil
 	}
 
@@ -153,16 +154,5 @@ func GetPokemonData(url string) (Pokemon, error) {
 	}
 
 	cache.Add(url, data)
-	return pkmn, nil
-}
-
-func GetPokemonDataFromCache(url string) (Pokemon, error) {
-	pkmn := Pokemon{}
-	if data, ok := cache.Get(url); ok {
-		if err := json.Unmarshal(data, &pkmn); err != nil {
-			return Pokemon{}, err
-		}
-		return pkmn, nil
-	}
 	return pkmn, nil
 }
