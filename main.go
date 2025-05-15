@@ -59,6 +59,11 @@ func main() {
 			description: "Accepts pokemon name as argument; throws a Pokeball at the specified Pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Accepts pokemon name as argument; displays details if specified Pokemon has been caught",
+			callback:    commandInspect,
+		},
 	}
 
 	cfg := Config{}
@@ -179,6 +184,31 @@ func commandCatch(cfg *Config, pokemon string) error {
 		pokedex[pkmn.Name] = pkmn
 	} else {
 		fmt.Printf("%s escaped!\n", pkmn.Name)
+	}
+
+	return nil
+}
+
+func commandInspect(cfg *Config, pokemon string) error {
+	pkmn, err := pokeapi.GetPokemonDataFromCache(baseUrl + "pokemon/" + pokemon)
+	if err != nil {
+		return err
+	}
+	if pkmn.Name == "" {
+		fmt.Printf("You ain't caught no %s!\n", pokemon)
+		return nil
+	}
+
+	fmt.Printf("Name: %s\n", pkmn.Name)
+	fmt.Printf("Height: %d\n", pkmn.Height)
+	fmt.Printf("Weight: %d\n", pkmn.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range pkmn.Stats {
+		fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, typ := range pkmn.Types {
+		fmt.Printf("  -%s\n", typ.Type.Name)
 	}
 
 	return nil

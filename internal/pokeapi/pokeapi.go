@@ -30,10 +30,27 @@ type areaPokemon struct {
 
 type Pokemon struct {
 	Name           string
+	Height         int
+	Weight         int
+	Stats          []PokemonStat
+	Types          []PokemonType
 	BaseExperience int `json:"base_experience"`
 }
 
-var cache = pokecache.NewCache(5 * time.Second)
+type PokemonStat struct {
+	Stat struct {
+		Name string
+	}
+	BaseStat int `json:"base_stat"`
+}
+
+type PokemonType struct {
+	Type struct {
+		Name string
+	}
+}
+
+var cache = pokecache.NewCache(5 * time.Minute)
 
 func GetLocationAreas(url string) (locationArea, error) {
 	locs := locationArea{}
@@ -106,11 +123,10 @@ func GetAreaPokemon(url string) (areaPokemon, error) {
 }
 
 func GetPokemonData(url string) (Pokemon, error) {
-	pkmn := Pokemon{}
-	if data, ok := cache.Get(url); ok {
-		if err := json.Unmarshal(data, &pkmn); err != nil {
-			return Pokemon{}, err
-		}
+	pkmn, err := GetPokemonDataFromCache(url)
+	if err != nil {
+		return Pokemon{}, err
+	} else if pkmn.Name != "" {
 		return pkmn, nil
 	}
 
@@ -137,5 +153,16 @@ func GetPokemonData(url string) (Pokemon, error) {
 	}
 
 	cache.Add(url, data)
+	return pkmn, nil
+}
+
+func GetPokemonDataFromCache(url string) (Pokemon, error) {
+	pkmn := Pokemon{}
+	if data, ok := cache.Get(url); ok {
+		if err := json.Unmarshal(data, &pkmn); err != nil {
+			return Pokemon{}, err
+		}
+		return pkmn, nil
+	}
 	return pkmn, nil
 }
